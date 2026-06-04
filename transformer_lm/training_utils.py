@@ -24,7 +24,31 @@ def get_batch(
     Returns:
         ``(x, y)`` both of shape ``(batch_size, context_length)``.
     """
-    raise NotImplementedError("TODO: Implement get_batch()")
+
+    if len(data) <= context_length:
+        raise ValueError(
+            "data must contain at least context_length + 1 tokens"
+        )
+    data = data.to(torch.long)
+    max_start = len(data) - context_length - 1
+
+    starts = torch.randint(
+        0,
+        max_start + 1,
+        (batch_size,),
+    )
+
+    x = torch.stack([
+        data[i : i + context_length]
+        for i in starts
+    ])
+
+    y = torch.stack([
+        data[i + 1 : i + context_length + 1]
+        for i in starts
+    ])
+
+    return x.to(device), y.to(device)
 
 
 @torch.no_grad()
@@ -47,4 +71,32 @@ def generate(
     Returns:
         List of token IDs (prompt + generated).
     """
-    raise NotImplementedError("TODO: Implement generate()")
+    if context_length is None:
+        context_length = model.context_length
+
+    tokens = list(prompt_ids)
+
+    device = next(model.parameters()).device
+
+    for _ in range(max_new_tokens):
+        x = torch.tensor(
+            [tokens[-context_length:]],
+            dtype=torch.long,
+            device=device,
+        )
+
+        logits = model(x)           # (1, T, vocab_size)
+        logits = logits[:, -1, :]   # (1, vocab_size)
+
+        logits = logits / temperature
+
+        probs = softmax(logits, dim=-1)
+
+        next_token = torch.multinomial(
+            probs,
+            num_samples=1,
+        ).item()
+
+        tokens.append(next_token)
+
+    return tokens
