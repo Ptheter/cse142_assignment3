@@ -8,7 +8,7 @@
 d_model: 80
 n_layers: 5
 n_heads: 5
-d_ff: 320
+d_ff: 256
 dropout: 0.0
 
 # Tranining
