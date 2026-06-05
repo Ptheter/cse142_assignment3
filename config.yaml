@@ -13,7 +13,7 @@ dropout: 0.0
 
 # Tranining
 batch_size: 32
-learning_rate: 0.001
+learning_rate: 0.0007
 min_lr: 0.00001
 warmup_steps: 500
 weight_decay: 0.1
